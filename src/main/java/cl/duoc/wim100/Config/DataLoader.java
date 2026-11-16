@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Componentgit status
+@Component
 public class DataLoader implements CommandLineRunner {
 
     private final UsuarioRepository usuarios;
