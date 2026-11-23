@@ -24,6 +24,7 @@ Proyecto académico de **Desarrollo de Aplicaciones Móviles (DSY1105)**, Duoc U
 | Spring Security Crypto (BCrypt) | Cifrado de contraseñas. Solo el encriptador: **no** se usa `spring-boot-starter-security`, que bloquearía todos los endpoints con un 401 |
 | Lombok | Getters, setters y constructores de las entidades |
 | Maven (wrapper incluido) | Build y dependencias |
+| Docker + Docker Compose | Levantar MySQL y el backend juntos, sin instalar nada más |
 
 ## 🏗️ Arquitectura
 
@@ -129,7 +130,41 @@ Respuesta 200:
 
 Áreas: Seguridad ofensiva (Red Team) · Seguridad defensiva (Blue Team) · Gobierno, riesgo y cumplimiento · Forense y respuesta a incidentes · Seguridad en la nube · Inteligencia de amenazas.
 
-## 💻 Cómo ejecutar
+## 🐳 Ejecutar con Docker (recomendado)
+
+Solo necesitas **Docker Desktop**. No hace falta instalar Java, Maven ni MySQL: `docker compose` crea dos contenedores, uno con MySQL 8 y otro con el backend, conectados en una red interna.
+
+```powershell
+git clone https://github.com/Andres-albornoz/wim100-backend.git
+cd wim100-backend
+docker compose up -d --build
+```
+
+La primera vez tarda unos minutos porque descarga las imágenes y compila el proyecto. El backend espera a que MySQL esté listo (healthcheck) antes de arrancar. Cuando termine, abre http://localhost:8080/api/postulantes.
+
+| Comando | Para qué sirve |
+|---|---|
+| `docker compose ps` | Ver si los contenedores están corriendo |
+| `docker compose logs -f backend` | Ver el registro del backend (Ctrl+C para salir) |
+| `docker compose down` | Detener todo (los datos se conservan) |
+| `docker compose down -v` | Detener todo y **borrar** la base de datos |
+| `docker compose up -d --build` | Volver a compilar después de cambiar el código |
+
+| Contenedor | Puerto en tu computador | Notas |
+|---|---|---|
+| `wim100-backend` | `8080` | La app en el emulador lo sigue usando con `http://10.0.2.2:8080/api/` |
+| `wim100-mysql` | `3307` | Usa 3307 para no chocar con un MySQL instalado en el 3306. Usuario `root`, contraseña `root` |
+
+Para cambiar la contraseña o los puertos, copia `.env.example` como `.env` y edita los valores. El archivo `.env` no se sube a GitHub.
+
+**Archivos de Docker**
+- `Dockerfile`: construcción en dos etapas. La primera compila el `.jar` con Maven y la segunda lo ejecuta en una imagen liviana que solo tiene Java 21, con un usuario sin privilegios de administrador.
+- `docker-compose.yml`: MySQL con un volumen persistente y un healthcheck, y el backend configurado por variables de entorno (`SPRING_DATASOURCE_URL` apunta a `mysql:3306`, el nombre del servicio).
+- `.dockerignore`: deja fuera `target/`, `.git/` y otros archivos que no hacen falta para compilar.
+
+> Si ya tienes el backend corriendo con `mvnw`, detenlo antes (Ctrl+C), porque los dos usan el puerto 8080.
+
+## 💻 Cómo ejecutar sin Docker
 
 ### Requisitos
 - **JDK 21** (sirve el que trae Android Studio).
@@ -206,6 +241,8 @@ Resumen de lo que se prueba:
 | `release version 21 not supported` | JDK antiguo | Instalar JDK 21 o usar el de Android Studio |
 | `cannot find symbol` en getters | Lombok sin procesamiento de anotaciones | Activarlo en IntelliJ |
 | Port 8080 already in use | Otro proceso usa el puerto | Cerrarlo o cambiar `server.port` |
+| `port is already allocated` al usar Docker | Otro proceso usa el puerto 8080 o 3307 | Detener el backend local o cambiar `BACKEND_PORT` / `MYSQL_PORT` en `.env` |
+| `Cannot connect to the Docker daemon` | Docker Desktop no está abierto | Abrir Docker Desktop y esperar a que diga *Engine running* |
 | La app recibe 404 | `BASE_URL` sin `/api/` o sin `/` final | La URL debe terminar en `/api/` |
 
 ---
