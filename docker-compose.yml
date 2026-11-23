@@ -1,0 +1,45 @@
+# Levanta MySQL 8 y el backend WIM 100 con un solo comando:
+#   docker compose up -d --build
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: wim100-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: wim100
+      TZ: America/Santiago
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      # 3307 en el computador para no chocar con un MySQL local en el 3306
+      - "${MYSQL_PORT:-3307}:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  backend:
+    build: .
+    image: wim100-backend:latest
+    container_name: wim100-backend
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # Dentro de Docker, MySQL se llama "mysql" (nombre del servicio), no "localhost"
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/wim100?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=America/Santiago
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      SPRING_JPA_SHOW_SQL: "false"
+      TZ: America/Santiago
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+
+volumes:
+  # Los datos de MySQL sobreviven aunque se borren los contenedores
+  mysql-data:
