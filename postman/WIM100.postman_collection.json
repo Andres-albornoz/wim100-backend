@@ -1,0 +1,403 @@
+{
+  "info": {
+    "name": "WIM 100 - wim100-backend",
+    "description": "Pruebas del microservicio WIM 100 (DSY1105, EP4). Ejecutar en orden con Run collection: el paso 4 guarda el id que usan los pasos 7 a 11. Datos ficticios.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8080"
+    },
+    {
+      "key": "idNueva",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Listar postulantes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Trae una lista\", () => pm.expect(pm.response.json()).to.be.an(\"array\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "2. Login correcto",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"usuario\": \"evaluadora1\",\n  \"password\": \"wim2026\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Trae el rol y no la contraseña\", () => { const j = pm.response.json(); pm.expect(j.rol).to.eql(\"EVALUADORA\"); pm.expect(j).to.not.have.property(\"password\"); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Login con contraseña mala",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/auth/login",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "auth",
+            "login"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"usuario\": \"evaluadora1\",\n  \"password\": \"incorrecta\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 401\", () => pm.response.to.have.status(401));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Registrar postulante",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"antonia.perez@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2299\",\n  \"area\": \"Forense y respuesta a incidentes\",\n  \"aniosExperiencia\": 6,\n  \"resumenExperiencia\": \"Analista forense en un equipo ficticio de respuesta a incidentes.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+              "pm.collectionVariables.set(\"idNueva\", pm.response.json().id);\npm.test(\"Parte en POSTULADA\", () => pm.expect(pm.response.json().estado).to.eql(\"POSTULADA\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Registrar con correo repetido",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"antonia.perez@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2299\",\n  \"area\": \"Forense y respuesta a incidentes\",\n  \"aniosExperiencia\": 6,\n  \"resumenExperiencia\": \"Analista forense en un equipo ficticio de respuesta a incidentes.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Registrar con datos inválidos",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"otra.persona@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2299\",\n  \"area\": \"Forense y respuesta a incidentes\",\n  \"aniosExperiencia\": -1,\n  \"resumenExperiencia\": \"Analista forense en un equipo ficticio de respuesta a incidentes.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 400\", () => pm.response.to.have.status(400));",
+              "pm.test(\"Indica el campo con error\", () => pm.expect(pm.response.json().errores).to.have.property(\"aniosExperiencia\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Ver postulante",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes/{{idNueva}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes",
+            "{{idNueva}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Editar postulante",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes/{{idNueva}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes",
+            "{{idNueva}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Antonia Pérez Lillo\",\n  \"correo\": \"antonia.perez@ejemplo.cl\",\n  \"telefono\": \"+56 9 1111 2300\",\n  \"area\": \"Forense y respuesta a incidentes\",\n  \"aniosExperiencia\": 7,\n  \"resumenExperiencia\": \"Analista forense en un equipo ficticio de respuesta a incidentes.\",\n  \"linkedinUrl\": \"https://www.linkedin.com/in/antonia-perez-demo\",\n  \"cvNombre\": \"CV_Antonia.pdf\",\n  \"registradaPor\": \"Camila Rojas Demo\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "9. Cambiar estado",
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes/{{idNueva}}/estado",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes",
+            "{{idNueva}}",
+            "estado"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"estado\": \"EN_EVALUACION\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+              "pm.test(\"Estado actualizado\", () => pm.expect(pm.response.json().estado).to.eql(\"EN_EVALUACION\"));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10. Eliminar postulante",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes/{{idNueva}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes",
+            "{{idNueva}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11. Ver postulante eliminado",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/postulantes/{{idNueva}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "postulantes",
+            "{{idNueva}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
