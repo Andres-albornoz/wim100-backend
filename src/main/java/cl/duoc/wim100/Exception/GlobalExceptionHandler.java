@@ -1,6 +1,7 @@
 package cl.duoc.wim100.Exception;
 
 import cl.duoc.wim100.dto.ErrorResponse;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -35,6 +36,13 @@ public class GlobalExceptionHandler {
         e.getBindingResult().getFieldErrors()
                 .forEach(f -> errores.put(f.getField(), f.getDefaultMessage()));
         return respuesta(HttpStatus.BAD_REQUEST, "Datos inválidos", errores);
+    }
+
+    /** La base de datos rechazó el dato (largo, nulo o duplicado): es culpa de la petición, no del servidor. */
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> integridad(DataIntegrityViolationException e) {
+        return respuesta(HttpStatus.BAD_REQUEST,
+                "Algún dato no cumple las restricciones de la base de datos", Map.of());
     }
 
     private ResponseEntity<ErrorResponse> respuesta(HttpStatus status, String mensaje, Map<String, String> errores) {
