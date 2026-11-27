@@ -9,6 +9,7 @@ public record CandidataRequest(
 
         @NotBlank(message = "El correo es obligatorio")
         @Email(message = "Formato de correo inválido")
+        @Size(max = 120, message = "El correo admite máximo 120 caracteres")
         String correo,
 
         @NotBlank(message = "El teléfono es obligatorio")
@@ -16,6 +17,7 @@ public record CandidataRequest(
         String telefono,
 
         @NotBlank(message = "El área es obligatoria")
+        @Size(max = 60, message = "El área admite máximo 60 caracteres")
         String area,
 
         @NotNull(message = "Indica los años de experiencia")
@@ -29,10 +31,13 @@ public record CandidataRequest(
 
         @NotBlank(message = "El enlace al perfil es obligatorio")
         @Pattern(regexp = "^https://.*", message = "Debe comenzar con https://")
+        @Size(max = 200, message = "El enlace admite máximo 200 caracteres")
         String linkedinUrl,
 
+        @Size(max = 255, message = "El nombre del CV admite máximo 255 caracteres")
         String cvNombre,
 
         @NotBlank(message = "Falta quién registra la candidatura")
+        @Size(max = 80)
         String registradaPor
 ) {}
